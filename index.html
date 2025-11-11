@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>展品语音导览 - 大连展馆</title>
+    <style>
+        /* 响应式样式 */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Microsoft YaHei', sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 400px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(90deg, #2c3e50, #3498db); color: white; padding: 25px 20px; text-align: center; }
+        .content { padding: 20px; }
+        .exhibit-image { width: 100%; border-radius: 10px; margin: 15px 0; }
+        .audio-player { width: 100%; margin: 15px 0; }
+        .description { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; line-height: 1.6; }
+        .controls { display: flex; gap: 10px; margin: 15px 0; justify-content: center; }
+        .control-btn { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; }
+        .nav-buttons { display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="exhibitTitle">展品语音导览</h1>
+            <p id="exhibitSubtitle">大连展馆 · 扫描二维码收听</p>
+        </div>
+        <div class="content">
+            <img class="exhibit-image" id="exhibitImage" alt="展品图片" style="display:none;">
+            <audio class="audio-player" id="audioPlayer" controls></audio>
+            <div class="controls">
+                <button class="control-btn" onclick="restartAudio()">重新播放</button>
+                <button class="control-btn" onclick="toggleSpeed()">倍速播放</button>
+            </div>
+            <div class="description">
+                <h3>展品介绍</h3>
+                <p id="exhibitDescription">请扫描展品二维码加载内容...</p>
+            </div>
+            <div class="nav-buttons">
+                <button class="control-btn" onclick="previousExhibit()">上一个</button>
+                <button class="control-btn" onclick="nextExhibit()">下一个</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 腾讯云COS配置 - 需要修改
+        const COS_CONFIG = {
+            bucket: 'dalian-museum-1250000000',  // 替换为您的桶名称
+            region: 'ap-beijing',                // 华北-北京
+            folder: 'exhibition-audio'
+        };
+
+        // 生成COS URL
+        function getCosAudioUrl(filename) {
+            return `https://dalian-museum-1250000000.cos.ap-beijing.myqcloud.com/Audio/My-exhibition-audio/${filename}`;
+        }
+
+        function getCosImageUrl(filename) {
+            return `https://dalian-museum-1250000000.cos.ap-beijing.myqcloud.com/Audio/My-exhibition-images/${filename}`;
+        }
+
+        // 展品数据
+        const exhibits = {
+            'exhibit_001': {
+                title: '青花瓷瓶',
+                subtitle: '明代景德镇官窑',
+                audio: getCosAudioUrl('exhibit_001.mp3'),
+                image: getCosImageUrl('exhibit_001.jpg'),
+                description: '此青花瓷瓶为明代景德镇官窑烧制，高45厘米，口径12厘米。瓶身绘有缠枝莲纹，釉色青翠欲滴，是明代青花瓷的典型代表作品。'
+            },
+            'exhibit_002': {
+                title: '青铜鼎',
+                subtitle: '商周时期礼器',
+                audio: getCosAudioUrl('exhibit_002.mp3'),
+                image: getCosImageUrl('exhibit_002.jpg'),
+                description: '这件青铜鼎出土于河南安阳，为商周时期重要礼器。鼎身饰有饕餮纹，三足鼎立，体现了古代青铜铸造工艺的高超水平。'
+            },
+            'exhibit_003': {
+                title: '山水画轴',
+                subtitle: '清代文人画作',
+                audio: getCosAudioUrl('exhibit_003.mp3'),
+                image: getCosImageUrl('exhibit_003.jpg'),
+                description: '这幅山水画轴为清代著名画家所作...'
+            }
+            // 添加更多展品...
+        };
+
+        let currentExhibitId = null;
+        let playbackSpeed = 1.0;
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const exhibitId = urlParams.get('exhibit') || 'exhibit_001';
+            loadExhibit(exhibitId);
+        });
+
+        function loadExhibit(exhibitId) {
+            const exhibit = exhibits[exhibitId];
+            if (!exhibit) return;
+
+            currentExhibitId = exhibitId;
+            
+            // 更新页面内容
+            document.getElementById('exhibitTitle').textContent = exhibit.title;
+            document.getElementById('exhibitSubtitle').textContent = exhibit.subtitle;
+            document.getElementById('exhibitDescription').textContent = exhibit.description;
+
+            // 设置图片
+            const img = document.getElementById('exhibitImage');
+            if (exhibit.image) {
+                img.src = exhibit.image;
+                img.style.display = 'block';
+            }
+
+            // 设置音频
+            document.getElementById('audioPlayer').src = exhibit.audio;
+        }
+
+        function restartAudio() {
+            const audio = document.getElementById('audioPlayer');
+            audio.currentTime = 0;
+            audio.play();
+        }
+
+        function toggleSpeed() {
+            const audio = document.getElementById('audioPlayer');
+            playbackSpeed = playbackSpeed === 1.0 ? 1.5 : 1.0;
+            audio.playbackRate = playbackSpeed;
+        }
+
+        function previousExhibit() {
+            navigateExhibit('prev');
+        }
+
+        function nextExhibit() {
+            navigateExhibit('next');
+        }
+
+        function navigateExhibit(direction) {
+            const ids = Object.keys(exhibits);
+            const currentIndex = ids.indexOf(currentExhibitId);
+            const newIndex = direction === 'next' ? 
+                (currentIndex + 1) % ids.length : 
+                (currentIndex - 1 + ids.length) % ids.length;
+            
+            loadExhibit(ids[newIndex]);
+            window.history.replaceState({}, '', `?exhibit=${ids[newIndex]}`);
+        }
+    </script>
+</body>
+</html>
