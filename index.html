@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>展品语音导览 - 大连展馆</title>
+    <title>展品语音导览</title>
     <style>
         /* 响应式样式 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Microsoft YaHei', sans-serif; }
@@ -23,7 +23,7 @@
     <div class="container">
         <div class="header">
             <h1 id="exhibitTitle">展品语音导览</h1>
-            <p id="exhibitSubtitle">大连展馆 · 扫描二维码收听</p>
+            <p id="exhibitSubtitle">扫描二维码收听</p>
         </div>
         <div class="content">
             <img class="exhibit-image" id="exhibitImage" alt="展品图片" style="display:none;">
@@ -47,11 +47,11 @@
 
         // 生成COS URL
         function getCosAudioUrl(filename) {
-            return `https://dalian-museum-1250000000.cos.ap-beijing.myqcloud.com/Audio/My-exhibition-audio/${filename}`;
+            return `https://my-audio-qrcode-1386354296.cos.ap-beijing.myqcloud.com/Audio/My-exhibition-audio/${filename}`;
         }
 
         function getCosImageUrl(filename) {
-            return `https://dalian-museum-1250000000.cos.ap-beijing.myqcloud.com/Audio/My-exhibition-images/${filename}`;
+            return `https://my-audio-qrcode-1386354296.cos.ap-beijing.myqcloud.com/Audio/My-exhibition-images/${filename}`;
         }
 
         // 展品数据
